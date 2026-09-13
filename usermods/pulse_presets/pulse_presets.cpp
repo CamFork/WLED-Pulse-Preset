@@ -307,12 +307,22 @@ class UsermodPulsePresets : public Usermod {
       oappend(F("addInfo('pulse_presets:widthToleranceMs',1,'+/- ms allowed when matching a pulse width');"));
       oappend(F("addInfo('pulse_presets:restoreDefaults',1,'check this and hit Save to reset ALL settings on this page back to defaults');"));
       for (uint8_t i = 0; i < PULSE_PRESETS_MAX_PATTERNS; i++) {
-        char str[96];
-        snprintf_P(str, sizeof(str), PSTR("addInfo('pulse_presets:patCounts[]',%u,'pulses in burst (0 = unused)','#%u count');"), i, i);
+        // NOTE: this buffer must comfortably fit the longest of the three
+        // formatted strings below (currently ~110 chars incl. terminator).
+        // snprintf_P silently TRUNCATES anything longer instead of erroring -
+        // a truncated line loses its closing ');' and breaks JS parsing for
+        // the *entire* settings page script (every usermod's panel, and the
+        // pin-dropdown feature), not just this one line. If you lengthen any
+        // of these strings later, bump this size and recheck.
+        char str[160];
+        // txt2 (4th arg) prints BEFORE the field as "Pattern N: " so the three
+        // fields belonging to one pattern (count/width/preset) are visually
+        // tied together; txt (3rd arg) prints after the field as a helper.
+        snprintf_P(str, sizeof(str), PSTR("addInfo('pulse_presets:patCounts[]',%u,'pulses in this burst (0 = disabled)','Pattern %u: ');"), i, i+1);
         oappend(str);
-        snprintf_P(str, sizeof(str), PSTR("addInfo('pulse_presets:patWidthsMs[]',%u,'expected width, ms - or pick a preset below','#%u width');"), i, i);
+        snprintf_P(str, sizeof(str), PSTR("addInfo('pulse_presets:patWidthsMs[]',%u,'expected average width, ms - or pick a preset below','Pattern %u: ');"), i, i+1);
         oappend(str);
-        snprintf_P(str, sizeof(str), PSTR("addInfo('pulse_presets:patPresets[]',%u,'WLED preset to fire on match (1-250)','#%u preset');"), i, i);
+        snprintf_P(str, sizeof(str), PSTR("addInfo('pulse_presets:patPresets[]',%u,'WLED preset to fire when this pattern matches (1-250)','Pattern %u: ');"), i, i+1);
         oappend(str);
       }
 
