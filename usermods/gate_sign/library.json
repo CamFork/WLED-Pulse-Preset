@@ -1,0 +1,5 @@
+{
+  "name": "gate_sign",
+  "build": { "libArchive": false },
+  "dependencies": {}
+}

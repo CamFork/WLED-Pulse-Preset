@@ -1,0 +1,5 @@
+{
+  "name": "ui_lock",
+  "build": { "libArchive": false },
+  "dependencies": {}
+}
