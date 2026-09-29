@@ -52,15 +52,9 @@ class GateSignUsermod : public Usermod {
   static int8_t            isrPin;
   static portMUX_TYPE      rbMux;
 
-  static void IRAM_ATTR isr() {
-    int64_t t = esp_timer_get_time();
-    uint8_t lvl = (uint8_t)gpio_get_level((gpio_num_t)isrPin);
-    portENTER_CRITICAL_ISR(&rbMux);
-    uint16_t next = (uint16_t)((rbHead + 1) % GATESIGN_RB);
-    if (next == rbTail) { rbOverflows++; rbOverflowFlag = true; }
-    else { rbT[rbHead] = t; rbL[rbHead] = lvl; rbHead = next; }
-    portEXIT_CRITICAL_ISR(&rbMux);
-  }
+  // Defined outside the class: an IRAM_ATTR function defined in the class body is
+  // implicitly inline, and the Xtensa linker then fails with "literal placed after use".
+  static void IRAM_ATTR isr();
 
   bool levelToOn(uint8_t lvl) const { return activeLow ? (lvl == 0) : (lvl != 0); }
 
@@ -377,6 +371,16 @@ volatile uint32_t GateSignUsermod::rbOverflows = 0;
 volatile bool     GateSignUsermod::rbOverflowFlag = false;
 int8_t            GateSignUsermod::isrPin = 9;
 portMUX_TYPE      GateSignUsermod::rbMux = portMUX_INITIALIZER_UNLOCKED;
+
+void IRAM_ATTR GateSignUsermod::isr() {
+  int64_t t = esp_timer_get_time();
+  uint8_t lvl = (uint8_t)gpio_get_level((gpio_num_t)isrPin);
+  portENTER_CRITICAL_ISR(&rbMux);
+  uint16_t next = (uint16_t)((rbHead + 1) % GATESIGN_RB);
+  if (next == rbTail) { rbOverflows++; rbOverflowFlag = true; }
+  else { rbT[rbHead] = t; rbL[rbHead] = lvl; rbHead = next; }
+  portEXIT_CRITICAL_ISR(&rbMux);
+}
 
 static GateSignUsermod gate_sign;
 REGISTER_USERMOD(gate_sign);
