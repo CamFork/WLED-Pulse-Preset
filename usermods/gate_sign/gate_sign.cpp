@@ -194,7 +194,7 @@ public:
 
     a = user.createNestedArray(F("Gate pulses (ms, newest first)"));
     String pl;
-    Segment sg;
+    gatesign::Segment sg;
     for (uint8_t i = 0; dec.logAt(i, sg); i++) {
       if (i) pl += F(" · ");
       pl += sg.on ? F("ON ") : F("off ");
